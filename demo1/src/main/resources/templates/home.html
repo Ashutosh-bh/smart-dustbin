@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Dustbin</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+<body background="C:\Users\RetailAdmin\Pictures\smart-dustbin.jpeg">
+
+<h1 class="text-info">Smart Dustbin Client Website</h1>
+
+<form class="form-inline">
+    <div class="form-group mb-2">
+        <label for="staticEmail2" class="sr-only">Email</label>
+        <input type="text" readonly class="form-control-plaintext" id="staticEmail2" value="Enter the dustbin id">
+    </div>
+    <div class="form-group mx-sm-3 mb-2">
+        <label for="inputPassword2" class="sr-only">password</label>
+        <input type="text" class="form-control" id="inputPassword2" placeholder="enter id">
+    </div>
+    <button type="button" onclick="getVal();" class="btn btn-primary mb-2">Check</button>
+</form>
+
+<h3>Values</h3>
+
+<p>
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample1">
+        Ultra Sonic Sensor Raw Value
+    </button>
+</p>
+
+<div class="collapse" id="collapseExample1">
+    <div class="card card-body">
+        <p id="US" class="font-weight-bold"></p>
+    </div>
+</div>
+
+
+<p>
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample2" aria-expanded="false" aria-controls="collapseExample2">
+        Gas Sensor Raw Value
+    </button>
+</p>
+
+<div class="collapse" id="collapseExample2">
+    <div class="card card-body">
+        <p id="GS" class="font-weight-bold"></p>
+    </div>
+</div>
+
+<h3>Status</h3>
+
+
+<p>
+    <button class="btn btn-warning" type="button" data-toggle="collapse" data-target="#collapseExample3" aria-expanded="false" aria-controls="collapseExample3">
+        Filling Satus
+    </button>
+</p>
+
+<div class="collapse" id="collapseExample3">
+    <div class="card card-body">
+        <p id="STS" class="font-weight-bold"></p>
+    </div>
+</div>
+
+
+<p>
+    <button class="btn btn-danger" type="button" data-toggle="collapse" data-target="#collapseExample4" aria-expanded="false" aria-controls="collapseExample4">
+        Fire Status
+    </button>
+</p>
+
+<div class="collapse" id="collapseExample4">
+    <div class="card card-body">
+        <p class="font-weight-bold" id="FSTS"></p>
+    </div>
+</div>
+
+
+<p>
+    <button class="btn btn-success" type="button" data-toggle="collapse" data-target="#collapseExample5" aria-expanded="false" aria-controls="collapseExample5">
+        Decomposition Status
+    </button>
+</p>
+
+<div class="collapse" id="collapseExample5">
+    <div class="card card-body">
+        <p class="font-weight-bold" id="DSTS"></p>
+    </div>
+</div>
+
+<p class="font-italic font-weight-bold text-right">Ashutosh Bhardwaj</p>
+<p class="font-italic font-weight-bold text-right">Abhay Kumar</p>
+
+<script type="text/javascript">
+    var data;
+    var ultra;
+    var gas;
+    var Status;
+    var fStatus;
+    var dStatus;
+
+    var count = 0;
+    var fCount = 0;
+    var dCount = 0;
+
+    var x = 0;
+    var prevId = x;
+
+    function getVal(){
+        x = document.getElementById("inputPassword2").value - 1;
+        console.log(x);
+    }
+
+    function repeat(){
+
+        var request = new XMLHttpRequest();
+        request.open('GET',"http://localhost:8080/dustbin/all");					// hits backend to get data from dusbin API
+        request.onload = function(){
+            data = JSON.parse(request.responseText);
+            ultra = data[x].ultraSonic;
+            gas = data[x].mq2;
+            Status = data[x].fillStatus;
+            fStatus = data[x].fireStatus;
+            dStatus = data[x].decomStatus;
+
+            console.log(x);
+            // console.log(prevId);
+            // console.log(data);
+            // console.log(gas);
+
+            var displayEl = document.getElementById("US");
+            displayEl.innerHTML = ultra+" cm of total 19 cm";                      // display ultrasonic sensor data
+
+            var displayE2 = document.getElementById("GS");						   // display mq2 gas sensor data
+            displayE2.innerHTML = gas+" ppm";
+
+            var displayE3 = document.getElementById("STS");
+            displayE3.innerHTML = Status;
+
+            var displayE4 = document.getElementById("FSTS");
+            displayE4.innerHTML = fStatus;
+
+            var displayE5 = document.getElementById("DSTS");
+            displayE5.innerHTML = dStatus;
+
+            if(prevId != x) count = 0;
+            /* count is mantained so that each alert is only shown one time, count is cleared if status is changed */
+
+            if((Status == "filled")&(count == 0)){
+                alert("Dustbin is filled, clear as soon as possible ");
+                count = 1
+            }else{
+                if(Status == "unfilled") count = 0;
+            }
+
+            if((fStatus == "fire")&(fCount == 0)){
+                alert("Fire detected, initiate emergency protocols");
+                fCount = 1
+            }else{
+                if(fStatus == "ok") fCount = 0;
+            }
+
+            if((dStatus == "decomposing")&(dCount == 0)){
+                alert("Garbage is decomposing, Dustbin clearing reminder");
+                dCount = 1
+            }else{
+                if(dStatus == "ok") dCount = 0;
+            }
+            prevId = x;
+        };
+
+        request.send();
+    }
+
+
+
+    setInterval(repeat,2000);
+
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>
